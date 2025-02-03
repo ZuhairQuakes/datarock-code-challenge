@@ -1,0 +1,20 @@
+name: geochem_classification
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Core Python and Jupyter
+  - python=3.9
+  - jupyter
+  
+  # Data Processing
+  - numpy
+  - pandas
+  
+  # Visualization
+  - matplotlib
+  - seaborn
+  
+  # Machine Learning
+  - scikit-learn
+  - xgboost
