@@ -1,0 +1,2 @@
+holes,mean_hole_accuracy,median_hole_accuracy,p10_hole_accuracy,p90_hole_accuracy,holes_with_both_classes,mean_balanced_accuracy_two_class_holes,mean_roc_auc_two_class_holes
+123,0.8724030160070163,0.9583333333333334,0.659047619047619,1.0,32,0.7151695205474285,0.8093312967215796
