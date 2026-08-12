@@ -1,0 +1,10 @@
+.DS_Store
+.ipynb_checkpoints/
+.ipython/
+.jupyter-config/
+.jupyter-data/
+.jupyter-runtime/
+.matplotlib-cache/
+.venv/
+__pycache__/
+outputs/

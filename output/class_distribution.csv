@@ -1,0 +1,3 @@
+dataset,A_rate,B_rate,A_rate_difference_vs_labelled_pp
+Labelled intervals,0.7145354645354646,0.28546453546453543,0.0
+Prediction intervals,0.34810951760104303,0.651890482398957,-36.642594693442156
