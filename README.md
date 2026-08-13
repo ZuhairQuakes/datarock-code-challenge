@@ -43,7 +43,7 @@ The workflow checks:
 - below-detection-limit strings such as `<0.005`;
 - the `-999` missing-value sentinel.
 
-For this exercise, `<x` is replaced with `x / 2`, while `-999` is converted to missing. The detection-limit convention is an explicit assumption requiring validation with an assay or geochemistry domain expert before operational use.
+For this exercise, `<x` is replaced with `x / 2`, while `-999` is converted to missing. The detection-limit convention is an explicit assumption requiring validation with an assay or geochemistry domain expert.
 
 Missingness is compared between labelled and prediction datasets and saved to [`output/missingness_comparison.csv`](output/missingness_comparison.csv).
 
