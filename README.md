@@ -31,7 +31,31 @@ The final model produces:
 
 The complete predictions are available at [`output/predictions.csv`](output/predictions.csv).
 
-## Exploratory data analysis
+## Analysis boundary: evidence and domain expertise
+
+This submission separates what the reproducible ML workflow can establish from decisions that require subject-matter knowledge.
+
+| Area | What this workflow can establish | What requires domain expertise |
+|---|---|---|
+| Data quality | Quantify missingness, unusual codes, censoring and distribution differences | Confirm assay units, analytical methods, detection limits, batch effects and the meanings of `-999` and blanks |
+| Predictive validation | Measure performance on drill holes excluded from model fitting | Decide whether validation and prediction holes are geologically and operationally comparable |
+| Model output | Produce repeatable class predictions, scores and uncertainty flags | Set a decision threshold using the consequences of false proximal and false distal calls |
+| Observed patterns | Report class, feature and downhole differences descriptively | Decide whether any pattern is geologically plausible or operationally meaningful |
+
+The results support a predictive prototype. They do not by themselves establish geological causes, expected prevalence in future drilling or deployment readiness.
+
+## Data understanding and QA/QC
+
+The source contains 4,004 labelled intervals from 123 holes and 767 prediction intervals from 17 separate holes.
+
+| Dataset | Original classes | Intervals | Drill holes |
+|---|---|---:|---:|
+| Labelled | A: 2,861; B: 1,143 | 4,004 | 123 |
+| Prediction | `?`: 767 | 767 | 17 |
+
+The workflow checks duplicate sample identifiers, non-positive drill intervals, blank assays, below-detection-limit strings such as `<0.005`, and the `-999` sentinel.
+
+For this exercise, `<x` is replaced with `x / 2`, while `-999` is converted to missing. Blank and sentinel values are then handled by median imputation with missingness indicators inside each model pipeline. During cross-validation, the imputer is fitted only on the training holes; the raw source data is not overwritten.
 
 The compact EDA below is calculated before model imputation. Raw quality counts cover the full dataset; missingness and skewness are calculated after applying the documented cleaning rules. Values reported as `<x` are censored assay results rather than missing values.
 
@@ -50,47 +74,34 @@ All eight labelled assay variables are strongly right-skewed on their original s
 
 ![Combined assay distributions](output/plots/assay_distributions.png)
 
-The figure compares cleaned, non-missing labelled and prediction values using density histograms on a `log1p` scale. Differences are descriptive dataset checks only. Their causes and significance require validation by geochemistry, assay QA/QC, and operational domain experts; no geological interpretation is assigned here. See the [fully executed notebook](nbtk/geochem_proximity_model.ipynb) and [`output/assay_eda_summary.csv`](output/assay_eda_summary.csv) for the complete calculations.
-
-## Workflow
-
-### 1. QA/QC and assay handling
-
-The workflow checks:
-
-- duplicate sample identifiers;
-- non-positive drill intervals;
-- blank and missing assay values;
-- below-detection-limit strings such as `<0.005`;
-- the `-999` missing-value sentinel.
-
-For this exercise, `<x` is replaced with `x / 2`, while `-999` is converted to missing. The detection-limit convention is an explicit assumption requiring validation with an assay or geochemistry domain expert.
-
-Missingness is compared between labelled and prediction datasets and saved to [`output/missingness_comparison.csv`](output/missingness_comparison.csv).
+The figure compares cleaned, non-missing labelled and prediction values using density histograms on a `log1p` scale. Missingness is also compared directly between the two datasets.
 
 ![Missingness comparison](output/plots/missingness_comparison.png)
 
-### 2. Features
+These are descriptive data checks only. The treatment of censored and missing assays, and the causes and significance of dataset differences, require review by geochemistry, assay QA/QC and operational domain experts. See the [fully executed notebook](nbtk/geochem_proximity_model.ipynb), [`output/assay_eda_summary.csv`](output/assay_eda_summary.csv) and [`output/missingness_comparison.csv`](output/missingness_comparison.csv) for the complete calculations.
+
+## Modelling workflow
+
+### 1. Features and exclusions
 
 The model uses only the eight assay variables. `Unique_ID`, `holeid`, `from`, and `to` are retained as metadata but excluded from the predictors. This tests predictive information in the geochemistry without introducing hole identity or interval depth as shortcuts.
+
+### 2. Models and class imbalance
+
+Two models are compared:
+
+1. **Logistic Regression** provides a simple benchmark using `log1p` transformation and standardisation.
+2. **Extra Trees** provides a flexible comparison that can represent nonlinear relationships and interactions without feature scaling.
+
+Both pipelines use median imputation, missingness indicators and balanced class weights. Because Class A forms approximately 71.5% of the labelled intervals, balanced accuracy is the primary selection metric and precision and recall are reported alongside it. No rows are duplicated or removed to rebalance the classes.
+
+Extra Trees is selected because it performs better than Logistic Regression under the same drill-hole-aware validation. Its single-worker fitting is deterministic so the generated score file is repeatable.
 
 ### 3. Drill-hole-aware validation
 
 Adjacent intervals from one drill hole are related. A row-random split could put neighbouring intervals from the same hole in both training and validation, producing an optimistic estimate for future holes.
 
-The workflow uses `StratifiedGroupKFold` with `holeid` as the group. The reported metrics are therefore out-of-fold results for holes unseen by the corresponding fitted model.
-
-Two models are compared:
-
-1. **Logistic Regression**
-   - median imputation with missingness indicators;
-   - `log1p` transformation and standardisation;
-   - balanced class weights.
-2. **Extra Trees**
-   - median imputation with missingness indicators;
-   - nonlinear tree ensemble;
-   - balanced class weights;
-   - deterministic single-worker fitting for repeatable score files.
+The workflow uses five-fold `StratifiedGroupKFold` with `holeid` as the group. Every validation hole is absent from its corresponding training fold, and the reported model comparison uses out-of-fold predictions.
 
 ![Grouped confusion matrix](output/plots/confusion_matrix.png)
 
@@ -117,9 +128,9 @@ Because 91 of the 123 holes contain only one observed class, mean per-hole accur
 
 ![Per-hole accuracy](output/plots/per_hole_accuracy.png)
 
-Variation across holes is presented as a validation result only. Any relationship between difficult holes and geology, sampling, assay campaigns, or spatial context requires domain-expert review.
+Variation across holes is presented as a validation result only. Any relationship between difficult holes and geology, sampling, assay campaigns or spatial context requires domain-expert review.
 
-### 5. Final model scores
+### 5. Final model and score output
 
 The selected Extra Trees pipeline is refit on all 4,004 labelled intervals and applied to all 767 unlabelled intervals.
 
@@ -131,7 +142,7 @@ The output deliberately uses **score** terminology:
 
 These values are not presented as calibrated probabilities.
 
-## Distribution checks and validation boundary
+## Prediction checks and distribution shift
 
 Class A represents approximately 71.5% of labelled intervals. The model assigns Class A to approximately 34.8% of prediction intervals, a difference of about -36.7 percentage points.
 
