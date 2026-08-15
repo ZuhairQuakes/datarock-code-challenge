@@ -31,6 +31,27 @@ The final model produces:
 
 The complete predictions are available at [`output/predictions.csv`](output/predictions.csv).
 
+## Exploratory data analysis
+
+The compact EDA below is calculated before model imputation. Raw quality counts cover the full dataset; missingness and skewness are calculated after applying the documented cleaning rules. Values reported as `<x` are censored assay results rather than missing values.
+
+| Assay | Blank/NA | `<x` values | `-999` | Labelled missing (%) | Prediction missing (%) | Labelled skewness |
+|---|---:|---:|---:|---:|---:|---:|
+| As | 1,503 | 0 | 0 | 36.19 | 7.04 | 9.68 |
+| Au | 6 | 464 | 0 | 0.12 | 0.13 | 7.51 |
+| Pb | 15 | 0 | 0 | 0.32 | 0.26 | 9.68 |
+| Fe | 62 | 0 | 0 | 1.17 | 1.96 | 3.70 |
+| Mo | 30 | 0 | 28 | 0.55 | 4.69 | 25.82 |
+| Cu | 25 | 0 | 0 | 0.55 | 0.39 | 49.21 |
+| S | 10 | 0 | 0 | 0.25 | 0.00 | 3.93 |
+| Zn | 9 | 0 | 0 | 0.20 | 0.13 | 12.78 |
+
+All eight labelled assay variables are strongly right-skewed on their original scales. This supports median rather than mean imputation as a robust baseline, but it does not establish that median imputation is geochemically correct.
+
+![Combined assay distributions](output/plots/assay_distributions.png)
+
+The figure compares cleaned, non-missing labelled and prediction values using density histograms on a `log1p` scale. Differences are descriptive dataset checks only. Their causes and significance require validation by geochemistry, assay QA/QC, and operational domain experts; no geological interpretation is assigned here. See the [fully executed notebook](nbtk/geochem_proximity_model.ipynb) and [`output/assay_eda_summary.csv`](output/assay_eda_summary.csv) for the complete calculations.
+
 ## Workflow
 
 ### 1. QA/QC and assay handling
@@ -160,6 +181,7 @@ After dependencies are installed, `./run.sh` is the one-command execution path. 
 | `output/per_hole_validation.csv` | Validation metrics for every labelled drill hole |
 | `output/per_hole_summary.csv` | Equal-hole-weighted summary statistics |
 | `output/missingness_comparison.csv` | Missingness comparison by assay feature |
+| `output/assay_eda_summary.csv` | Compact assay QA counts, missingness, medians, and labelled-data skewness |
 | `output/class_distribution.csv` | Labelled and predicted class proportions |
 | `output/feature_importance.csv` | Extra Trees predictive feature importance |
 | `output/downhole_continuity.csv` | Predicted transition counts by new drill hole |
