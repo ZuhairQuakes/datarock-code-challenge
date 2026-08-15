@@ -46,12 +46,12 @@ The results support a predictive prototype. They do not by themselves establish 
 
 ## Data understanding and QA/QC
 
-The source contains 4,004 labelled intervals from 123 holes and 767 prediction intervals from 17 separate holes.
+The source contains 4,004 labelled intervals from 123 holes and 767 unlabelled intervals from 17 separate holes.
 
 | Dataset | Original classes | Intervals | Drill holes |
 |---|---|---:|---:|
 | Labelled | A: 2,861; B: 1,143 | 4,004 | 123 |
-| Prediction | `?`: 767 | 767 | 17 |
+| Unlabelled | `?`: 767 | 767 | 17 |
 
 The workflow checks duplicate sample identifiers, non-positive drill intervals, blank assays, below-detection-limit strings such as `<0.005`, and the `-999` sentinel.
 
@@ -59,7 +59,7 @@ For this exercise, `<x` is replaced with `x / 2`, while `-999` is converted to m
 
 The compact EDA below is calculated before model imputation. Raw quality counts cover the full dataset; missingness and skewness are calculated after applying the documented cleaning rules. Values reported as `<x` are censored assay results rather than missing values.
 
-| Assay | Blank/NA | `<x` values | `-999` | Labelled missing (%) | Prediction missing (%) | Labelled skewness |
+| Assay | Blank/NA | `<x` values | `-999` | Labelled missing (%) | Unlabelled missing (%) | Labelled skewness |
 |---|---:|---:|---:|---:|---:|---:|
 | As | 1,503 | 0 | 0 | 36.19 | 7.04 | 9.68 |
 | Au | 6 | 464 | 0 | 0.12 | 0.13 | 7.51 |
@@ -74,7 +74,7 @@ All eight labelled assay variables are strongly right-skewed on their original s
 
 ![Combined assay distributions](output/plots/assay_distributions.png)
 
-The figure compares cleaned, non-missing labelled and prediction values using density histograms on a `log1p` scale. Missingness is also compared directly between the two datasets.
+The figure compares cleaned, non-missing labelled and unlabelled values using density histograms on a `log1p` scale. Missingness is also compared directly between the two datasets.
 
 ![Missingness comparison](output/plots/missingness_comparison.png)
 
@@ -220,7 +220,7 @@ README.md
 
 - Labels are derived from proximity to an existing orebody interpretation.
 - Grouped cross-validation still shows fold-to-fold and hole-to-hole variation.
-- Missingness differs between the labelled and prediction datasets.
+- Missingness differs between the labelled and unlabelled datasets.
 - Model scores are not calibrated probabilities.
 - The 0.50 classification threshold has not been selected using operational error costs.
 - Intervals are scored independently; no spatial or downhole smoothing is applied.
